@@ -1,0 +1,8 @@
+Relação: Energia(id_energia, voltagem, corrente, potencia, tempo);
+Dependências Funcionais: id_energia -> voltagem, corrente, potencia;
+                         tempo -> id_energia;
+Está na 2ª Forma normal, pois, além de estar na 1FN, não possui atributos não primos em relação à chave candidata (tempo),
+no entanto possui atributos transitivamente dependentes, sendo que (voltagem, corrente, potencia) dependem transitivamente do (tempo).
+Utilizando a regra da transitividade para alcançar a 3ª Forma Normal:
+Relações: Energia(id_energia, voltagem, corrente, potencia, tempo);
+          Momento(tempo, id_energia);

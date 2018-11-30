@@ -1,0 +1,66 @@
+create database piezo;
+use piezo;
+
+create user joao@'%.%.%.%' identified by 'aluno123';
+select user, host from mysql.user; -- just to see...
+
+GRANT ALL ON piezo.* TO joao@'%.%.%.%' WITH GRANT OPTION;
+show grants for joao@'%.%.%.%'; -- just to see...
+
+CREATE TABLE IF NOT EXISTS energy(
+
+  id_energy INT NOT NULL AUTO_INCREMENT,
+
+  voltage DECIMAL(10,8) NOT NULL,
+
+  `current` DECIMAL(10,8) NOT NULL,
+
+  power DECIMAL(10,8) GENERATED ALWAYS AS (voltage*`current`),
+
+  PRIMARY KEY (id_energy)
+
+)ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS momentum(
+  `time` TIMESTAMP(4) NOT NULL,
+  id_energy INT NOT NULL,
+  PRIMARY KEY (`time`),
+  CONSTRAINT fk_momentum_energy
+    FOREIGN KEY (id_energy)
+    REFERENCES piezo.energy (id_energy)
+)ENGINE = InnoDB;
+
+-- trigger
+create trigger tri_momentum after insert
+ on piezo.energy for each row
+
+  insert into piezo.momentum (`time`, id_energy)
+ values(utc_timestamp(4), new.id_energy);
+
+-- indexes
+create index volt_index on energy (voltage);
+
+create index amp_index on energy (`current`);
+
+create index watt_index on energy (power);
+
+--stored procedure
+DELIMITER $$
+
+CREATE PROCEDURE create_energy (IN volt decimal(10,8),IN amp decimal(10,8))
+
+BEGIN
+
+    insert into energy (voltage, `current`) values (volt ,amp);
+
+END$$
+
+DELIMITER ;
+
+-- test
+call create_energy(0.5,0.5);
+insert into energy(voltage, `current`) values(.1, .5);
+
+select energy.id_energy, energy.voltage, energy.`current`, energy.power, momentum.`time`
+
+  from energy, momentum where energy.id_energy = momentum.id_energy;
